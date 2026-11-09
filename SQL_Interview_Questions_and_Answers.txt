@@ -1,0 +1,66 @@
+SQL INTERVIEW QUESTIONS AND ANSWERS
+E-Commerce SQL Data Analysis | Elevate Labs Task 3 | SQLite
+
+1. What is the difference between WHERE and HAVING?
+
+WHERE filters individual rows before grouping. HAVING filters grouped results after GROUP BY, so it can use aggregate expressions such as SUM() and COUNT().
+
+Example:
+SELECT customer_id, SUM(amount) AS spend
+FROM sales
+WHERE status = 'Completed'
+GROUP BY customer_id
+HAVING SUM(amount) > 10000;
+
+
+2. What are the different types of joins?
+
+- INNER JOIN: Returns rows with matching keys in both tables.
+- LEFT JOIN: Returns every row from the left table and matching rows from the right. Unmatched right-side columns are NULL.
+- RIGHT JOIN: Returns every row from the right table and matching rows from the left. For compatibility with older SQLite versions, reverse the table order and use LEFT JOIN.
+- FULL OUTER JOIN: Returns matched and unmatched rows from both sides. Supported in SQLite 3.39 and later.
+- CROSS JOIN: Returns the Cartesian product of both tables.
+
+
+3. How do you calculate average revenue per user in SQL?
+
+First calculate revenue per customer, then divide total revenue by the number of users in the chosen population. Be clear whether the denominator is all registered customers or only purchasing customers.
+
+For all registered customers:
+WITH customer_revenue AS (
+    SELECT o.customer_id,
+           SUM(oi.quantity * oi.unit_price) AS revenue
+    FROM orders o
+    JOIN order_items oi ON oi.order_id = o.order_id
+    GROUP BY o.customer_id
+)
+SELECT ROUND(
+    COALESCE(SUM(revenue), 0) * 1.0 /
+    (SELECT COUNT(*) FROM customers), 2
+) AS average_revenue_per_customer
+FROM customer_revenue;
+
+
+4. What are subqueries?
+
+A subquery is a query nested inside another SQL statement. It can return a single value, a list of values, or a derived table. It is useful for comparisons, filtering, and staged calculations.
+
+
+5. How do you optimize a SQL query?
+
+- Select only the required columns instead of using SELECT *.
+- Add indexes to columns frequently used in joins, filters, and sorting, while considering the overhead on inserts and updates.
+- Filter rows early where appropriate.
+- Avoid unnecessary joins and repeated calculations.
+- Inspect EXPLAIN QUERY PLAN in SQLite.
+- Use ANALYZE when appropriate and measure performance on representative data.
+
+
+6. What is a view in SQL?
+
+A view is a named, stored SQL query that behaves like a virtual table. It simplifies repeated analysis and provides a consistent interface to underlying tables. A normal SQLite view does not store its result rows; it runs the underlying query when accessed.
+
+
+7. How would you handle NULL values in SQL?
+
+Use IS NULL and IS NOT NULL to test missing values, and COALESCE() to provide a fallback value. Choose how to handle NULL based on what it represents: unknown, not applicable, or missing. Remember that COUNT(column) ignores NULL values, while COUNT(*) counts rows.
